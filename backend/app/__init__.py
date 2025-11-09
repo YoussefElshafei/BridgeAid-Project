@@ -15,7 +15,11 @@ def create_app():
 
     # --- Register blueprints ---
     from app.auth import auth_bp
+    from app.volunteers import volunteer_bp
+    from app.incidents import incidents_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(volunteer_bp, url_prefix="/api/volunteers")
+    app.register_blueprint(incidents_bp, url_prefix="/api/incidents")
 
     return app
