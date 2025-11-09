@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Flame, Shield, Heart, AlertTriangle, Users, MapPin, ArrowRight, TrendingUp, Menu, X, User } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Navbar Component
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState(null);
+
+  useEffect(() => {
+    const email = localStorage.getItem('userEmail');
+    if (email) {
+      setUserEmail(email);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userEmail');
+    setUserEmail(null);
+    window.location.href = '/';
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo and Login - Left Side */}
           <div className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
@@ -19,13 +33,27 @@ const Navbar = () => {
               <span className="text-2xl font-bold text-white">BridgeAid</span>
             </Link>
             
-            <Link to="/login" className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-white">
-              <User className="w-4 h-4" />
-              <span className="font-medium">Login</span>
-            </Link>
+            {userEmail ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 rounded-lg text-white">
+                  <User className="w-4 h-4" />
+                  <span className="font-medium">{userEmail}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors text-white font-medium"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-white">
+                <User className="w-4 h-4" />
+                <span className="font-medium">Login</span>
+              </Link>
+            )}
           </div>
 
-          {/* Desktop Navigation - Right Side */}
           <div className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-white font-medium">
               Homepage
@@ -47,7 +75,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden text-white"
@@ -56,7 +83,6 @@ const Navbar = () => {
           </button>
         </div>
 
-        {/* Mobile Navigation Menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 pb-4 space-y-3">
             <Link to="/" className="block text-white font-medium py-2">
@@ -84,10 +110,118 @@ const Navbar = () => {
   );
 };
 
+// Live Map Component
+const LiveMap = () => {
+  const mapRef = useRef(null);
+  const mapInstanceRef = useRef(null);
+  const [status, setStatus] = useState('Loading map...');
+
+  useEffect(() => {
+    // Load Leaflet CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+    document.head.appendChild(link);
+
+    // Load Leaflet JS
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+    script.async = true;
+    
+    script.onload = () => {
+      initMap();
+    };
+    
+    document.body.appendChild(script);
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+    };
+  }, []);
+
+  const initMap = () => {
+    if (!window.L || !mapRef.current) return;
+
+    // Initialize map centered on Hamilton, Ontario
+    const map = window.L.map(mapRef.current).setView([43.2557, -79.8711], 11);
+    mapInstanceRef.current = map;
+
+    // Add tile layer
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    setStatus('Map loaded. Fetching incidents...');
+
+    // Fetch incidents from backend
+    fetchIncidents(map);
+  };
+
+  const fetchIncidents = async (map) => {
+    try {
+      const response = await fetch('http://localhost:5000/incidents/confirmed');
+      
+      if (response.ok) {
+        const data = await response.json();
+        const incidents = data.confirmed || [];
+        
+        if (incidents.length === 0) {
+          setStatus('No confirmed incidents at this time.');
+        } else {
+          setStatus(`Showing ${incidents.length} confirmed incident(s)`);
+          
+          // Add markers for each incident
+          incidents.forEach(incident => {
+            const marker = window.L.marker([incident.lat, incident.lng]).addTo(map);
+            marker.bindPopup(`
+              <div style="color: #1e293b;">
+                <strong style="font-size: 14px;">${incident.incident}</strong><br/>
+                <span style="font-size: 12px; color: #64748b;">Reports: ${incident.report_count}</span><br/>
+                <span style="font-size: 11px; color: #94a3b8;">${new Date(incident.timestamp).toLocaleString()}</span>
+              </div>
+            `);
+          });
+        }
+      } else {
+        setStatus('Unable to load incidents.');
+      }
+    } catch (err) {
+      console.error('Error fetching incidents:', err);
+      setStatus('Error loading incidents.');
+    }
+  };
+
+  return (
+    <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
+      <div className="flex items-center gap-3 mb-6">
+        <MapPin className="w-8 h-8 text-white" />
+        <h2 className="text-3xl font-bold text-white">Live Disaster Map</h2>
+      </div>
+      <p className="text-white/70 mb-4 text-lg">
+        Track active disasters and recovery efforts in real-time across your region
+      </p>
+      <p className="text-white/60 text-sm mb-6">{status}</p>
+      
+      {/* Map Container */}
+      <div 
+        ref={mapRef} 
+        className="w-full h-[500px] rounded-2xl border-2 border-white/20 bg-slate-800"
+        style={{ zIndex: 1 }}
+      />
+      
+      <p className="text-white/50 text-sm mt-4">
+        Pins show confirmed incidents (3+ unique reports)
+      </p>
+    </div>
+  );
+};
+
 const Home = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
-      {/* Navigation */}
       <Navbar />
 
       {/* Hero Section */}
@@ -137,24 +271,7 @@ const Home = () => {
       {/* Live Disaster Map Section */}
       <div className="px-6 pb-20">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 md:p-12">
-            <div className="flex items-center gap-3 mb-6">
-              <MapPin className="w-8 h-8 text-white" />
-              <h2 className="text-3xl font-bold text-white">Live Disaster Map</h2>
-            </div>
-            <p className="text-white/70 mb-8 text-lg">
-              Track active disasters and recovery efforts in real-time across your region
-            </p>
-            
-            {/* Map Placeholder */}
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border-2 border-dashed border-white/30 flex items-center justify-center aspect-video">
-              <div className="text-center p-8">
-                <MapPin className="w-16 h-16 text-white/40 mx-auto mb-4" />
-                <p className="text-white/60 text-lg font-medium">Interactive Map Coming Soon</p>
-                <p className="text-white/40 text-sm mt-2">Real-time disaster tracking and resource allocation</p>
-              </div>
-            </div>
-          </div>
+          <LiveMap />
         </div>
       </div>
 

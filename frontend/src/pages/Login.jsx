@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { Flame, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react';
+import { Flame, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [isSignIn, setIsSignIn] = useState(true);
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     password: ''
   });
@@ -27,30 +28,22 @@ const Login = () => {
     setLoading(true);
 
     // Basic validation
-    if (isSignIn) {
-      if (!formData.email || !formData.password) {
-        setError('Please fill in all fields');
-        setLoading(false);
-        return;
-      }
-    } else {
-      if (!formData.username || !formData.email || !formData.password) {
-        setError('Please fill in all fields');
-        setLoading(false);
-        return;
-      }
-      if (formData.password.length < 6) {
-        setError('Password must be at least 6 characters');
-        setLoading(false);
-        return;
-      }
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields');
+      setLoading(false);
+      return;
+    }
+    if (!isSignIn && formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
     }
 
     try {
-      // API endpoint - adjust this to match your backend URL
-      const endpoint = isSignIn ? '/api/auth/signin' : '/api/auth/register';
+      // API endpoint - matches your Flask backend
+      const endpoint = isSignIn ? '/login' : '/register';
       
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`http://localhost:5000/api/auth${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -58,20 +51,33 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-
       if (response.ok) {
-        setSuccess(isSignIn ? 'Login successful!' : 'Account created successfully!');
-        // Store token or user data if needed
-        if (data.token) {
-          localStorage.setItem('authToken', data.token);
+        if (isSignIn) {
+          // Login returns plain text token
+          const token = await response.text();
+          localStorage.setItem('authToken', token);
+          localStorage.setItem('userEmail', formData.email);
+          setSuccess('Login successful!');
+          
+          // Redirect to home page after successful login
+          setTimeout(() => {
+            navigate('/');
+          }, 1500);
+        } else {
+          // Register returns JSON
+          const data = await response.json();
+          setSuccess('Account created successfully! Please sign in.');
+          
+          // Switch to sign in mode after registration
+          setTimeout(() => {
+            setIsSignIn(true);
+            setFormData({ email: formData.email, password: '' });
+            setSuccess('');
+          }, 2000);
         }
-        // Redirect to home page after successful login
-        setTimeout(() => {
-          window.location.href = '/';
-        }, 1500);
       } else {
-        setError(data.message || 'Something went wrong');
+        const data = await response.json();
+        setError(data.error || 'Something went wrong');
       }
     } catch (err) {
       setError('Unable to connect to server. Please try again later.');
@@ -89,7 +95,7 @@ const Login = () => {
 
   const toggleMode = () => {
     setIsSignIn(!isSignIn);
-    setFormData({ username: '', email: '', password: '' });
+    setFormData({ email: '', password: '' });
     setError('');
     setSuccess('');
   };
@@ -153,27 +159,6 @@ const Login = () => {
 
           {/* Form Fields */}
           <div className="space-y-5">
-            {/* Username (Register only) */}
-            {!isSignIn && (
-              <div>
-                <label className="block text-white/80 text-sm font-medium mb-2">
-                  Username
-                </label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/50" />
-                  <input
-                    type="text"
-                    name="username"
-                    value={formData.username}
-                    onChange={handleInputChange}
-                    onKeyPress={handleKeyPress}
-                    placeholder="Choose a username"
-                    className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-            )}
-
             {/* Email */}
             <div>
               <label className="block text-white/80 text-sm font-medium mb-2">
