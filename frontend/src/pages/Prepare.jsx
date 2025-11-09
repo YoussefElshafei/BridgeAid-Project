@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
 import { BookOpen, CheckSquare, Download, Play, Award, AlertTriangle, Home as HomeIcon, Droplets, Flame, Wind, Thermometer, Heart, Menu, X, User } from 'lucide-react';
+import jsPDF from 'jspdf';
 
 // Navigation Bar Component
 const Navbar = () => {
@@ -16,7 +16,7 @@ const Navbar = () => {
               <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-500 rounded-lg flex items-center justify-center">
                 <Flame className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-white">PhoenixAid</span>
+              <span className="text-2xl font-bold text-white">BridgeAid</span>
             </div>
             
             <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors text-white">
@@ -111,7 +111,7 @@ const PreparePage = () => {
       name: 'Flood',
       icon: Droplets,
       color: 'from-blue-500 to-cyan-600',
-      description: 'Prepare for flooding and learn water safety measures',
+      description: 'Learn how to stay safe before, during, and after a flood incident',
       tips: [
         'Know your flood risk and evacuation routes',
         'Move valuable items to higher floors',
@@ -126,7 +126,7 @@ const PreparePage = () => {
       name: 'Wildfire',
       icon: Flame,
       color: 'from-red-500 to-orange-600',
-      description: 'Protect your home and family from wildfire threats',
+      description: 'Learn how to stay safe before, during, and after a wildfire threat',
       tips: [
         'Create defensible space around your home (100 feet)',
         'Use fire-resistant building materials',
@@ -141,7 +141,7 @@ const PreparePage = () => {
       name: 'Hurricane',
       icon: Wind,
       color: 'from-indigo-500 to-purple-600',
-      description: 'Prepare for hurricane season and severe tropical storms',
+      description: 'Learn how to stay safe before, during, and after a hurricane',
       tips: [
         'Know your evacuation zone and routes',
         'Reinforce garage doors and windows with shutters',
@@ -156,7 +156,7 @@ const PreparePage = () => {
       name: 'Extreme Heat',
       icon: Thermometer,
       color: 'from-yellow-500 to-red-600',
-      description: 'Stay safe during extreme heat and heatwaves',
+      description: 'Learn how to stay safe before, during, and after extreme heat and heatwaves',
       tips: [
         'Identify cooling centers in your community',
         'Install window reflectors and weatherstripping',
@@ -168,7 +168,7 @@ const PreparePage = () => {
     },
     {
       id: 'homeless',
-      name: 'Supporting Homeless Communities',
+      name: 'Community Support',
       icon: Heart,
       color: 'from-pink-500 to-rose-600',
       description: 'Learn how to help vulnerable populations during disasters',
@@ -185,9 +185,9 @@ const PreparePage = () => {
 
   const videos = [
     { id: 'BLEPakj1YTY', title: 'What to Do Before, During, and After an Earthquake' },
-    { id: 'Wxz8yWjcKJ4', title: 'Flood Safety Tips - What You Need to Know' },
-    { id: 'iCMv1H4OFq0', title: 'Wildfire Preparedness - Protecting Your Home' },
-    { id: 'SCNP8z2_l-k', title: 'Hurricane Preparation Checklist' }
+    { id: 'Ed3g9WWD6xM', title: 'Flood and Water Safety - RNLI' },
+    { id: 'wIYA2xn2hmc', title: 'How to Prepare for a Wildfire' },
+    { id: '7IQTeelrDWA', title: 'How to Stay Safe in a Flash Flood Emergency' }
   ];
 
   const quizQuestions = [
@@ -244,6 +244,30 @@ const PreparePage = () => {
     setSelectedAnswer(null);
     setShowResult(false);
   };
+  
+  const downloadChecklistPDF = () => {
+  if (!selectedDisaster) return;
+
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text(`${selectedDisaster.name} - Emergency Checklist`, 14, 20);
+
+  doc.setFontSize(12);
+  let y = 35;
+
+  checklist.forEach((item, index) => {
+    // If we run out of space, add a new page
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text(`${index + 1}. ${item}`, 14, y);
+    y += 10;
+  });
+
+  doc.save(`${selectedDisaster.name.replace(/\s+/g, '_')}_Checklist.pdf`);
+    };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
@@ -254,7 +278,7 @@ const PreparePage = () => {
       <div className="pt-20">
         {/* Hero Section */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 animate-pulse"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
           <div className="relative max-w-7xl mx-auto px-6 py-20">
             <div className="text-center">
               <div className="inline-flex items-center gap-2 bg-orange-500/20 backdrop-blur-sm px-6 py-2 rounded-full mb-6 border border-orange-500/30">
@@ -277,10 +301,10 @@ const PreparePage = () => {
         {/* Disaster Type Cards */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <h2 className="text-4xl font-bold text-white mb-4 text-center">
-            Choose Your Disaster Type
+            Choose What To Learn
           </h2>
           <p className="text-slate-400 text-center mb-12">
-            Select a disaster to access tailored preparation guides and checklists
+            Select a card to access tailored preparation guides and checklists
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
@@ -314,7 +338,7 @@ const PreparePage = () => {
                 <div>
                   <h3 className="text-3xl font-bold text-white mb-6 flex items-center gap-3">
                     <BookOpen className="w-8 h-8 text-orange-400" />
-                    Preparation Tips
+                    Preparation Tips for {selectedDisaster.name}
                   </h3>
                   <div className="space-y-4">
                     {selectedDisaster.tips.map((tip, index) => (
@@ -348,7 +372,10 @@ const PreparePage = () => {
                       ))}
                     </div>
                   </div>
-                  <button className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2">
+                  <button
+                  onClick={downloadChecklistPDF}
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all flex items-center justify-center gap-2"
+                  >
                     <Download className="w-5 h-5" />
                     Download Checklist PDF
                   </button>
