@@ -259,7 +259,6 @@ def report():
     ), 201
 
 @incidents_bp.get("")
-@jwt_required()
 def list_confirmed():
     """List confirmed incidents; also run LLM verification for the last 24 hours."""
     verify_with_llm_last_24h()

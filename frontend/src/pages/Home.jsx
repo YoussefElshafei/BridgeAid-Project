@@ -162,7 +162,7 @@ const LiveMap = () => {
 
   const fetchIncidents = async (map) => {
     try {
-      const response = await fetch('http://localhost:5000/incidents/confirmed');
+      const response = await fetch('http://localhost:5000/api/incidents');
       
       if (response.ok) {
         const data = await response.json();

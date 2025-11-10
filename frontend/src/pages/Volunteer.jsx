@@ -152,7 +152,7 @@ const Volunteers = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/volunteer', {
+      const response = await fetch('http://localhost:5000/api/volunteers', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -204,7 +204,7 @@ const Volunteers = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:5000/volunteer/register', {
+      const response = await fetch('http://localhost:5000/api/volunteers/register', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
