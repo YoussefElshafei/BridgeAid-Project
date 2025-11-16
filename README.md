@@ -100,6 +100,7 @@ Real-time updates based on community reporting
 
 
 **🛠 Tech Stack**
+
 **Frontend**
 
 React
@@ -114,6 +115,7 @@ Vite
 
 Javascript
 
+
 **Backend**
 
 Python 
@@ -122,9 +124,11 @@ Flask
 
 RESTful API architecture
 
+
 **Database**
 
 PostgreSQL
+
 
 **Security**
 
@@ -135,4 +139,5 @@ Input validation
 API request throttling
 
 Server-side error handling
+
 
