@@ -20,6 +20,7 @@ Tracking local and global disaster recovery
 Built with security, scalability, and usability at its core, BridgeAid bridges responders, citizens, and volunteers during crisis events.
 
 **🚀 Features**
+
 🛡 Prepare
 
 Educational hub with:
@@ -134,3 +135,4 @@ Input validation
 API request throttling
 
 Server-side error handling
+
