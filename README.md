@@ -2,6 +2,8 @@
 
 A disaster‑response platform for the Hamilton & McMaster community — built to scale nationwide.
 
+---
+
 <div align="center">
 
 **Connecting Communities in Times of Crisis**
@@ -239,4 +241,5 @@ BridgeAid is designed to scale **beyond Hamilton** — enabling a unified disast
 💼 *Built to impress recruiters. Designed to help communities.*
 
 </div>
+
 
