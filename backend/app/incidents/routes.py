@@ -136,7 +136,7 @@ def llm_search_and_verify(query: str):
     Reads API key from GOOGLE_API_KEY env var.
     Returns dict: {"verified": bool, "summary": str, "sources": [urls...]}
     """
-    api_key = 'AIzaSyC7gE7v3f2lr_pYLKXiVEbPZVoWsf5F5Jg'
+    api_key = "PLACEKEYHERE'
     if not api_key:
         return {"verified": False, "summary": "No Gemini API key set.", "sources": []}
 
